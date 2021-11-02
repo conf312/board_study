@@ -8,20 +8,20 @@
 				<input type="hidden" name="id" th:value="${info.id}">
 				<div class="mb-3">
 				    <label for="exampleInputEmail1" class="form-label">Title.</label>
-				    <input type="text" class="form-control" name="title" th:value="${info.title}">
+				    <input type="text" class="form-control" name="title" th:value="${info.title}" required >
 				</div>
 				<div class="mb-3">
 			    	<label for="exampleInputPassword1" class="form-label">Content.</label>
-			    	<textarea class="form-control" rows="5" cols="" name="content" th:text="${info.content}"></textarea>
+			    	<textarea class="form-control" rows="5" name="content" th:text="${info.content}" required ></textarea>
 				</div>
 				<div class="mb-3">
 				    <label for="exampleInputEmail1" class="form-label">Writer.</label>
-				    <input type="text" class="form-control" name="registerId" th:value="${info.registerId}">
+				    <input type="text" class="form-control" name="registerId" th:value="${info.registerId}" required >
 				</div>
 				<div class="clearfix">
 					<div class="float-left">
 						<button type="button" class="btn btn-success" onclick="javascript:location.href='/board/list'">Previous</button>
-						<button type="submit" class="btn btn-primary">Edit</button>
+						<button type="button" class="btn btn-primary" onclick="fnSubmit();">Edit</button>
 					</div>
 					<div class="float-right">
 						<button type="button" class="btn btn-danger" th:onclick="fnViewDelete()">Delete</button>
@@ -30,6 +30,26 @@
 			</form>
 		</div>
 	    <script th:inline="javascript">
+		    let frm = $("#frm");
+			
+			function fnSubmit() {
+		        $("#frm").submit();
+		    }
+		    
+		    $(function() {
+		    	frm.validate({
+		            messages: {
+		            	title: {
+		                    required : "Custom required, Please enter a title."
+		                }
+		            },
+		            submitHandler: function (form) {
+		                // Submit Action
+		                form.submit();
+		            }
+		        });
+		    });
+		    
 			function fnViewDelete() {
 				if (confirm("Do you want to delete it?")) {
 					let frm = $("#frm");
