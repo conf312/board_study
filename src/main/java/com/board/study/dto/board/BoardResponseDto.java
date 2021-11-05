@@ -35,9 +35,6 @@ public class BoardResponseDto {
 		return toStringDateTime(this.registerTime);
 	}
 	
-	/**
-     * Java 8 기준 포맷 LocalDateTime to StringDate
-     */
     public static String toStringDateTime(LocalDateTime localDateTime) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return Optional.ofNullable(localDateTime)

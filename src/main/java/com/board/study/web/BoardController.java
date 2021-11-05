@@ -5,6 +5,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import com.board.study.dto.board.BoardRequestDto;
 import com.board.study.service.BoardService;
@@ -41,7 +42,7 @@ public class BoardController {
 		
 		try {
 			if (boardRequestDto.getId() != null) {
-				model.addAttribute("info", boardService.findById(boardRequestDto.getId()));
+				model.addAttribute("resultMap", boardService.findById(boardRequestDto.getId()));
 			}
 		} catch (Exception e) {
 			throw new Exception(e.getMessage()); 
@@ -51,12 +52,10 @@ public class BoardController {
 	}
 	
 	@PostMapping("/board/write/action")
-	public String boardWriteAction(Model model, BoardRequestDto boardRequestDto) throws Exception {
+	public String boardWriteAction(Model model, BoardRequestDto boardRequestDto, MultipartHttpServletRequest multiRequest) throws Exception {
 		
 		try {
-			Long result = boardService.save(boardRequestDto);
-			
-			if (result < 1) {
+			if (!boardService.save(boardRequestDto, multiRequest)) {
 				throw new Exception("#Exception boardWriteAction!");
 			}
 		} catch (Exception e) {
@@ -67,12 +66,12 @@ public class BoardController {
 	}
 	
 	@PostMapping("/board/view/action")
-	public String boardViewAction(Model model, BoardRequestDto boardRequestDto) throws Exception {
+	public String boardViewAction(Model model, BoardRequestDto boardRequestDto, MultipartHttpServletRequest multiRequest) throws Exception {
 		
 		try {
-			int result = boardService.updateBoard(boardRequestDto);
+			boolean result = boardService.updateBoard(boardRequestDto, multiRequest);
 			
-			if (result < 1) {
+			if (!result) {
 				throw new Exception("#Exception boardViewAction!");
 			}
 		} catch (Exception e) {

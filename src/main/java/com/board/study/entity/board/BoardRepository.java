@@ -13,6 +13,7 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
 	static final String UPDATE_BOARD = "UPDATE Board "
 			+ "SET TITLE = :#{#boardRequestDto.title}, "
 			+ "CONTENT = :#{#boardRequestDto.content}, "
+			+ "REGISTER_ID = :#{#boardRequestDto.registerId}, "
 			+ "UPDATE_TIME = NOW() "
 			+ "WHERE ID = :#{#boardRequestDto.id}";
 	
@@ -21,7 +22,7 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
 			+ "WHERE ID = :id";
 	
 	static final String DELETE_BOARD = "DELETE FROM Board "
-			+ "WHERE ID IN (:deleteList)";
+			+ "WHERE ID IN (:deleteIdList)";
 	
 	@Transactional
 	@Modifying
@@ -36,5 +37,5 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
 	@Transactional
 	@Modifying
 	@Query(value = DELETE_BOARD, nativeQuery = true)
-	public int deleteBoard(@Param("deleteList") Long[] deleteList);
+	public int deleteBoard(@Param("deleteIdList") Long[] deleteIdList);
 }

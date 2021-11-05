@@ -1,7 +1,6 @@
 package com.board.study.service;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -9,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import com.board.study.dto.board.BoardResponseDto;
 import com.board.study.dto.board.BoardRequestDto;
@@ -22,20 +22,31 @@ import lombok.RequiredArgsConstructor;
 public class BoardService {
 
 	private final BoardRepository boardRepository;
+	private final BoardFileService boardFileService;
 	
 	@Transactional
-	public Long save(BoardRequestDto boardSaveDto) {
-		return boardRepository.save(boardSaveDto.toEntity()).getId();
+	public boolean save(BoardRequestDto boardRequestDto, MultipartHttpServletRequest multiRequest) throws Exception {
+		
+		Board result = boardRepository.save(boardRequestDto.toEntity());
+		
+		boolean resultFlag = false;
+		
+		if (result != null) {
+			boardFileService.uploadFile(multiRequest, result.getId());
+			resultFlag = true;
+		}
+		
+		return resultFlag;
 	}
 	
 	/*
-		Æ®·£Àè¼Ç¿¡ readOnly=true ¿É¼ÇÀ» ÁÖ¸é ½ºÇÁ¸µ ÇÁ·¹ÀÓ¿öÅ©°¡ ÇÏÀÌ¹ö³×ÀÌÆ® ¼¼¼Ç ÇÃ·¯½Ã ¸ğµå¸¦ MANUAL·Î ¼³Á¤ÇÑ´Ù.
-		ÀÌ·¸°Ô ÇÏ¸é °­Á¦·Î ÇÃ·¯½Ã¸¦ È£ÃâÇÏÁö ¾Ê´Â ÇÑ ÇÃ·¯½Ã°¡ ÀÏ¾î³ªÁö ¾Ê´Â´Ù.
-		µû¶ó¼­ Æ®·£Àè¼ÇÀ» Ä¿¹ÔÇÏ´õ¶óµµ ¿µ¼Ó¼º ÄÁÅØ½ºÆ®°¡ ÇÃ·¯½Ã µÇÁö ¾Ê¾Æ¼­ ¿£Æ¼Æ¼ÀÇ µî·Ï, ¼öÁ¤, »èÁ¦ÀÌ µ¿ÀÛÇÏÁö ¾Ê°í,
-		¶ÇÇÑ ÀĞ±â Àü¿ëÀ¸·Î, ¿µ¼Ó¼º ÄÁÅØ½ºÆ®´Â º¯°æ °¨Áö¸¦ À§ÇÑ ½º³À¼¦À» º¸°üÇÏÁö ¾ÊÀ¸¹Ç·Î ¼º´ÉÀÌ Çâ»óµÈ´Ù.
-	*/
+		íŠ¸ëœì­ì…˜ì— readOnly=true ì˜µì…˜ì„ ì£¼ë©´ ìŠ¤í”„ë§ í”„ë ˆì„ì›Œí¬ê°€ í•˜ì´ë²„ë„¤ì´íŠ¸ ì„¸ì…˜ í”ŒëŸ¬ì‹œ ëª¨ë“œë¥¼ MANUALë¡œ ì„¤ì •í•œë‹¤.
+		ì´ë ‡ê²Œ í•˜ë©´ ê°•ì œë¡œ í”ŒëŸ¬ì‹œë¥¼ í˜¸ì¶œí•˜ì§€ ì•ŠëŠ” í•œ í”ŒëŸ¬ì‹œê°€ ì¼ì–´ë‚˜ì§€ ì•ŠëŠ”ë‹¤.
+		ë”°ë¼ì„œ íŠ¸ëœì­ì…˜ì„ ì»¤ë°‹í•˜ë”ë¼ë„ ì˜ì†ì„± ì»¨í…ìŠ¤íŠ¸ê°€ í”ŒëŸ¬ì‹œ ë˜ì§€ ì•Šì•„ì„œ ì—”í‹°í‹°ì˜ ë“±ë¡, ìˆ˜ì •, ì‚­ì œì´ ë™ì‘í•˜ì§€ ì•Šê³ ,
+		ë˜í•œ ì½ê¸° ì „ìš©ìœ¼ë¡œ, ì˜ì†ì„± ì»¨í…ìŠ¤íŠ¸ëŠ” ë³€ê²½ ê°ì§€ë¥¼ ìœ„í•œ ìŠ¤ëƒ…ìƒ·ì„ ë³´ê´€í•˜ì§€ ì•Šìœ¼ë¯€ë¡œ ì„±ëŠ¥ì´ í–¥ìƒëœë‹¤.
+	 */
 	@Transactional(readOnly = true)
-	public HashMap<String, Object> findAll(Integer page, Integer size) {
+	public HashMap<String, Object> findAll(Integer page, Integer size) throws Exception {
 		
 		HashMap<String, Object> resultMap = new HashMap<String, Object>();
 		
@@ -49,20 +60,42 @@ public class BoardService {
 		return resultMap;
 	}
 	
-	public BoardResponseDto findById(Long id) {
+	public HashMap<String, Object> findById(Long id) throws Exception {
+		
+		HashMap<String, Object> resultMap = new HashMap<String, Object>(); 
+		
 		boardRepository.updateBoardReadCntInc(id);
-		return new BoardResponseDto(boardRepository.findById(id).get());
+		
+		BoardResponseDto info = new BoardResponseDto(boardRepository.findById(id).get());
+		
+		resultMap.put("info", info);
+		resultMap.put("fileList", boardFileService.findByBoardId(info.getId()));
+		
+		return resultMap;
 	}
 	
-	public int updateBoard(BoardRequestDto boardRequestDto) {
-		return boardRepository.updateBoard(boardRequestDto);
+	public boolean updateBoard(BoardRequestDto boardRequestDto, MultipartHttpServletRequest multiRequest) throws Exception {
+		
+		int result = boardRepository.updateBoard(boardRequestDto);
+		
+		boolean resultFlag = false;
+		
+		if (result > 0) {
+			boardFileService.uploadFile(multiRequest, boardRequestDto.getId());
+			resultFlag = true;
+		}
+		
+		return resultFlag;
 	}
 	
-	public void deleteById(Long id) {
+	public void deleteById(Long id) throws Exception {
+		Long[] idArr = {id};
+		boardFileService.deleteBoardFileYn(idArr);
 		boardRepository.deleteById(id);
 	}
 	
-	public void deleteAll(Long[] deleteId) {
-		boardRepository.deleteBoard(deleteId);
+	public void deleteAll(Long[] deleteIdList) throws Exception {
+		boardFileService.deleteBoardFileYn(deleteIdList);
+		boardRepository.deleteBoard(deleteIdList);
 	}
 }
